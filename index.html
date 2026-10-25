@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Brain Tiles – Free Number Merge Puzzle Game</title>
+  <meta name="description" content="Challenge your mind with Brain Tiles, a sleek and responsive number-merging puzzle game. Combine tiles, strategize your moves, and reach the legendary 2048 tile.">
+  <meta name="keywords" content="brain tiles, 2048, number puzzle, merge game, brain games, logic puzzle, arcade puzzle, free browser game">
+  <meta name="theme-color" content="#040711">
+  <meta name="color-scheme" content="dark">
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Brain Tiles – Free Number Merge Puzzle Game">
+  <meta property="og:description" content="Swipe, combine identical numbers, and reach 2048 in this modern, neon-styled brain teaser puzzle game.">
+  <meta property="og:site_name" content="Brain Tiles">
+
+  <!-- Twitter Meta -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Brain Tiles – Free Number Merge Puzzle Game">
+  <meta name="twitter:description" content="Swipe, combine identical numbers, and reach 2048 in this modern, neon-styled brain teaser puzzle game.">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <!-- Fonts: Google Fonts Outfit + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Futuristic Arcade Background Atmosphere -->
+  <div class="arcade-environment" aria-hidden="true">
+    <div class="light-bloom bloom-cyan"></div>
+    <div class="light-bloom bloom-violet"></div>
+    <div class="light-bloom bloom-ambient"></div>
+    <div class="perspective-horizon">
+      <div class="perspective-grid"></div>
+    </div>
+    <div class="scanline-overlay"></div>
+    <canvas id="ambient-canvas" class="ambient-canvas"></canvas>
+  </div>
+
+  <div class="app-wrapper">
+    <!-- Top Header & Navigation -->
+    <header class="game-header">
+      <div class="brand-area">
+        <div class="eyebrow-container">
+          <span class="eyebrow-badge">
+            <span class="pulse-dot"></span>
+            NUMBER MERGE ARCADE
+          </span>
+        </div>
+        
+        <div class="logo-badge">
+          <!-- Custom Geometric Arcade Tile Symbol -->
+          <div class="logo-symbol-wrapper">
+            <svg class="logo-icon" viewBox="0 0 40 40" fill="none">
+              <rect x="3" y="3" width="15" height="15" rx="4" fill="#0E1A2F" stroke="#06B6D4" stroke-width="1.5"/>
+              <rect x="22" y="3" width="15" height="15" rx="4" fill="#1A153A" stroke="#8B5CF6" stroke-width="1.5"/>
+              <rect x="3" y="22" width="15" height="15" rx="4" fill="#1A153A" stroke="#8B5CF6" stroke-width="1.5"/>
+              <!-- Fused Glowing Core Tile -->
+              <rect x="22" y="22" width="15" height="15" rx="4" fill="url(#coreGlow)" stroke="#38BDF8" stroke-width="1.5"/>
+              <path d="M18 10.5H22M10.5 18V22M22 29.5H18M29.5 18V22" stroke="rgba(56, 189, 248, 0.4)" stroke-dasharray="1 1"/>
+              <defs>
+                <linearGradient id="coreGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#06B6D4"/>
+                  <stop offset="50%" stop-color="#3B82F6"/>
+                  <stop offset="100%" stop-color="#8B5CF6"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="logo-halo" aria-hidden="true"></div>
+          </div>
+
+          <div class="brand-text">
+            <h1 class="game-title">Brain <span class="gradient-text">Tiles</span></h1>
+            <p class="game-tagline">Fuse numbers. Forge 2048.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Translucent Score Panels -->
+      <div class="scores-container" aria-label="Scores">
+        <div class="score-card current-score-card" id="score-card">
+          <div class="score-header">
+            <span class="score-indicator cyan-dot"></span>
+            <span class="score-label">SCORE</span>
+          </div>
+          <span class="score-val" id="current-score" aria-live="polite">0</span>
+          <div class="score-addition" id="score-addition" aria-hidden="true"></div>
+        </div>
+
+        <div class="score-card best-card">
+          <div class="score-header">
+            <span class="score-indicator violet-dot"></span>
+            <span class="score-label">BEST</span>
+            <svg class="crown-icon" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M2 13h12v1.5H2V13zm0-7.5l3.5 3L8 3l2.5 5.5L14 5.5v6H2v-6z"/>
+            </svg>
+          </div>
+          <span class="score-val" id="best-score" aria-live="polite">0</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Controls Toolbar -->
+    <nav class="toolbar" aria-label="Game Controls">
+      <button type="button" class="btn btn-secondary" id="undo-btn" title="Undo Last Move (Ctrl+Z)" aria-label="Undo Last Move" disabled>
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 7v6h6"></path>
+          <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"></path>
+        </svg>
+        <span>Undo</span>
+      </button>
+
+      <button type="button" class="btn btn-primary" id="new-game-btn" title="Start a fresh game" aria-label="New Game">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+        </svg>
+        <span>New Game</span>
+      </button>
+
+      <button type="button" class="btn btn-ghost icon-only" id="sound-btn" title="Toggle Sound" aria-label="Toggle Sound Effects">
+        <svg class="btn-icon sound-icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <svg class="btn-icon sound-icon-off hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
+      </button>
+
+      <button type="button" class="btn btn-ghost icon-only" id="help-btn" title="How to Play" aria-label="Open Instructions">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </button>
+    </nav>
+
+    <!-- Main Game Board Container with Arcade Frame -->
+    <main class="board-wrapper">
+      <div class="board-bezel-frame">
+        <!-- Bezel Corner Accent Brackets -->
+        <span class="corner-bracket corner-tl" aria-hidden="true"></span>
+        <span class="corner-bracket corner-tr" aria-hidden="true"></span>
+        <span class="corner-bracket corner-bl" aria-hidden="true"></span>
+        <span class="corner-bracket corner-br" aria-hidden="true"></span>
+
+        <div class="board-container" id="board-container" tabindex="0" role="application" aria-label="4 by 4 Brain Tiles puzzle grid. Use arrow keys, WASD, or swipe to slide tiles.">
+          
+          <!-- Static background slots (4x4 = 16 recessed grid cells) -->
+          <div class="grid-background" aria-hidden="true">
+            <div class="grid-cell" data-cell="0-0"></div>
+            <div class="grid-cell" data-cell="0-1"></div>
+            <div class="grid-cell" data-cell="0-2"></div>
+            <div class="grid-cell" data-cell="0-3"></div>
+            <div class="grid-cell" data-cell="1-0"></div>
+            <div class="grid-cell" data-cell="1-1"></div>
+            <div class="grid-cell" data-cell="1-2"></div>
+            <div class="grid-cell" data-cell="1-3"></div>
+            <div class="grid-cell" data-cell="2-0"></div>
+            <div class="grid-cell" data-cell="2-1"></div>
+            <div class="grid-cell" data-cell="2-2"></div>
+            <div class="grid-cell" data-cell="2-3"></div>
+            <div class="grid-cell" data-cell="3-0"></div>
+            <div class="grid-cell" data-cell="3-1"></div>
+            <div class="grid-cell" data-cell="3-2"></div>
+            <div class="grid-cell" data-cell="3-3"></div>
+          </div>
+
+          <!-- Dynamic Animated Tile Layer -->
+          <div class="tile-layer" id="tile-layer" aria-live="polite"></div>
+
+          <!-- In-Board Overlays -->
+          <!-- Victory Overlay (Reaching 2048) -->
+          <div class="overlay overlay-victory hidden" id="victory-overlay" role="dialog" aria-modal="true" aria-labelledby="victory-title">
+            <div class="overlay-content">
+              <div class="overlay-trophy">⚡ 2048 ⚡</div>
+              <h2 id="victory-title" class="overlay-heading">Cosmic Fusion Reached!</h2>
+              <p class="overlay-text">Brilliant strategy! You forged the legendary 2048 tile.</p>
+              <div class="overlay-actions">
+                <button type="button" class="btn btn-primary" id="keep-playing-btn">Keep Going</button>
+                <button type="button" class="btn btn-secondary" id="victory-restart-btn">New Game</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Game Over Overlay -->
+          <div class="overlay overlay-gameover hidden" id="gameover-overlay" role="dialog" aria-modal="true" aria-labelledby="gameover-title">
+            <div class="overlay-content">
+              <div class="overlay-icon">🌌</div>
+              <h2 id="gameover-title" class="overlay-heading">Grid Locked!</h2>
+              <p class="overlay-text">No matching adjacent tiles or moves remaining.</p>
+              <div class="final-score-box">
+                <span>Final Score:</span>
+                <strong id="final-score">0</strong>
+              </div>
+              <div class="overlay-actions">
+                <button type="button" class="btn btn-primary" id="play-again-btn">Play Again</button>
+                <button type="button" class="btn btn-secondary" id="gameover-undo-btn" title="Undo the fatal move">Undo Move</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Quick Directional Pad (for touch users or accessibility) -->
+      <div class="mobile-dpad" aria-label="On-screen directional controls">
+        <button type="button" class="dpad-btn dpad-up" data-dir="0" aria-label="Slide Up">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
+        </button>
+        <div class="dpad-row">
+          <button type="button" class="dpad-btn dpad-left" data-dir="3" aria-label="Slide Left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <div class="dpad-center" aria-hidden="true">BT</div>
+          <button type="button" class="dpad-btn dpad-right" data-dir="1" aria-label="Slide Right">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+        <button type="button" class="dpad-btn dpad-down" data-dir="2" aria-label="Slide Down">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+      </div>
+    </main>
+
+    <!-- Quick Instructions / Tips -->
+    <section class="instructions-card" aria-label="Quick instructions">
+      <h2 class="sr-only">How to Play Brain Tiles</h2>
+      <div class="guide-pills">
+        <div class="guide-item">
+          <span class="guide-icon">🕹️</span>
+          <span class="guide-desc">Use <strong>Arrow Keys</strong>, <strong>WASD</strong>, or <strong>Swipe</strong></span>
+        </div>
+        <div class="guide-item">
+          <span class="guide-icon">✨</span>
+          <span class="guide-desc">Matching tiles <strong>merge into double</strong> on contact</span>
+        </div>
+        <div class="guide-item">
+          <span class="guide-icon">🎯</span>
+          <span class="guide-desc">Reach the <strong>2048 tile</strong> to conquer the matrix</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Clean Reserved Space for Future Ads (AdSense Ready, strictly without fake ads) -->
+    <aside class="ad-slot-container" aria-label="Sponsorship space"></aside>
+
+    <!-- Modal: Confirmation for New Game -->
+    <div class="modal-backdrop hidden" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+      <div class="modal-card">
+        <h3 id="confirm-modal-title" class="modal-title">Start a New Game?</h3>
+        <p class="modal-desc">Your active puzzle progress and current score will be reset. Are you sure you want to start over?</p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="confirm-cancel-btn">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirm-proceed-btn">Restart Game</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Complete Rules & Guide -->
+    <div class="modal-backdrop hidden" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
+      <div class="modal-card help-modal-card">
+        <div class="modal-header">
+          <h3 id="help-modal-title" class="modal-title">Brain Tiles Guide & Rules</h3>
+          <button type="button" class="modal-close-btn" id="help-close-btn" aria-label="Close guide">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="rule-section">
+            <h4>🎯 Objective</h4>
+            <p>Slide the numbered tiles on the 4×4 grid. When two tiles with the same number collide during a move, they fuse into one tile with the sum of their values (e.g. 2 + 2 = 4, 4 + 4 = 8, ..., 1024 + 1024 = 2048).</p>
+          </div>
+          <div class="rule-section">
+            <h4>🕹️ Controls</h4>
+            <ul>
+              <li><strong>Desktop:</strong> Press <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> or <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd>.</li>
+              <li><strong>Mobile:</strong> Swipe across the board in any of the 4 directions.</li>
+              <li><strong>D-Pad:</strong> Tap the navigation buttons below the board on mobile.</li>
+            </ul>
+          </div>
+          <div class="rule-section">
+            <h4>🧠 Pro Tips</h4>
+            <ul>
+              <li>Keep your highest value tile anchored in one of the corners (like the bottom-right).</li>
+              <li>Build a cascading snake pattern: arrange descending numbers sequentially in the row containing your highest tile.</li>
+              <li>Use the <strong>Undo</strong> button if you make an accidental move!</li>
+            </ul>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-primary full-width" id="help-ok-btn">Got It, Let's Play!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="game-footer">
+      <p class="footer-copy">Brain Tiles &bull; Number Merge Arcade &bull; Crafted with pure HTML, CSS, and Vanilla JavaScript</p>
+    </footer>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
